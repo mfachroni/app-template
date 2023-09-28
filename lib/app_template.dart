@@ -26,7 +26,6 @@ class _StatePage extends State<AppTemplate> {
   Widget build(BuildContext context) {
     return AppTemplateControllerWidget(
       appController: widget.appController,
-      getCurrentLocation: widget.getCurrentLocation,
       child: MultiProvider(
         providers: [
           ChangeNotifierProvider(
