@@ -29,8 +29,9 @@ class AppSidebarState extends State<AppSidebar> {
     Future.delayed(
       Duration.zero,
       () {
-        String location =
-            AppTemplateControllerWidget.of(context)!.getCurrentLocation();
+        String location = AppTemplateControllerWidget.of(context)!
+            .appController
+            .getCurrentLocation();
         AppTemplateControllerWidget.of(context)!
             .appController
             .setSelected(location);
@@ -321,6 +322,9 @@ class SideMenu extends SideItem {
   }
 
   void action(BuildContext context) {
+    AppTemplateControllerWidget.of(context)!
+        .appController
+        .actionSidebar(routePath);
     // GoRouter.of(context).go(routePath);
   }
 

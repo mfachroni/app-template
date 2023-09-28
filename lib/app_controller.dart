@@ -11,13 +11,14 @@ abstract class AppController extends ChangeNotifier {
   List<String> listExpanded = [];
 
   Future<Response> getSidebarData(BuildContext context);
+  actionSidebar(String routePath);
+  String getCurrentLocation();
 
   late Map<String, String> routePath;
   late Map<String, IconData> iconData;
 
   Future<void> loadSideMenu(BuildContext context) async {
-    String location =
-        AppTemplateControllerWidget.of(context)!.getCurrentLocation();
+    String location = getCurrentLocation();
 
     Response response = await getSidebarData(context);
 
