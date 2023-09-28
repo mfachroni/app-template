@@ -11,7 +11,7 @@ abstract class AppController extends ChangeNotifier {
   List<String> listExpanded = [];
 
   Future<Response> getSidebarData(BuildContext context);
-  actionSidebar(String routePath);
+  actionSidebar(BuildContext context, String routePath);
   String getCurrentLocation();
 
   late Map<String, String> routePath;

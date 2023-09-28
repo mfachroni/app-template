@@ -324,7 +324,7 @@ class SideMenu extends SideItem {
   void action(BuildContext context) {
     AppTemplateControllerWidget.of(context)!
         .appController
-        .actionSidebar(routePath);
+        .actionSidebar(context, routePath);
     // GoRouter.of(context).go(routePath);
   }
 
