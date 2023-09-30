@@ -7,14 +7,10 @@ import 'package:flutter/material.dart';
 class AppPage extends StatefulWidget {
   final Widget body;
   // final String? initUrl;
-  final AppPageData? initialPageData;
+  final Future<Response> Function(BuildContext context)? loadData;
   final Function(AppPageData initalData)? onInitSuccess;
-  const AppPage({
-    super.key,
-    required this.body,
-    this.onInitSuccess,
-    this.initialPageData,
-  });
+  const AppPage(
+      {super.key, required this.body, this.onInitSuccess, this.loadData});
 
   @override
   State<StatefulWidget> createState() {
@@ -25,17 +21,19 @@ class AppPage extends StatefulWidget {
 class AppPageState extends State<AppPage> {
   bool _isLoading = true;
   DioException? dioException;
+  AppPageData _appPageData = AppPageData();
 
   @override
   void initState() {
-    if (widget.initialPageData != null) {
+    if (widget.loadData != null) {
       Future.delayed(Duration.zero, () async {
         setState(() {
           _isLoading = true;
         });
-        widget.initialPageData!
+        _appPageData
             .processResponse(
           context,
+          loadData: widget.loadData!,
         )
             .then((value) {
           setState(() {
@@ -48,6 +46,10 @@ class AppPageState extends State<AppPage> {
             _isLoading = false;
           });
         });
+      });
+    } else {
+      setState(() {
+        _isLoading = false;
       });
     }
 

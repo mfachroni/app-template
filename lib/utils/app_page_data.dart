@@ -3,12 +3,11 @@ import 'package:flutter/cupertino.dart';
 
 class AppPageData {
   List<ActionClass> actions = [];
-  Future<Response> Function(BuildContext context) loadData;
+ 
   late Response response;
 
   AppPageData({
     this.actions = const [],
-    required this.loadData,
   });
 
   bool can(String action) {
@@ -19,7 +18,7 @@ class AppPageData {
     return false;
   }
 
-  Future<AppPageData> processResponse(BuildContext context) async {
+  Future<AppPageData> processResponse(BuildContext context, {required Future<Response> Function(BuildContext context) loadData}) async {
     response = await loadData(context);
     actions = response.data['actions'] != null
         ? (response.data['actions'] as Map<dynamic, dynamic>)
