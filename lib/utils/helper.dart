@@ -59,22 +59,34 @@ class AppHelper {
 
   static Future<dynamic> showMessage(
     BuildContext context, {
-    required QuickAlertType type,
+    required AppMessageType type,
     String? title,
     String? message,
     Function()? onCancelBtnTap,
     Function()? onConfirmBtnTap,
   }) {
+    QuickAlertType tmpType = QuickAlertType.info;
+    
+    if (type == AppMessageType.info) {
+      tmpType = QuickAlertType.info;
+    } else if (type == AppMessageType.error) {
+      tmpType = QuickAlertType.error;
+    } else if (type == AppMessageType.success) {
+      tmpType = QuickAlertType.success;
+    } else if (type == AppMessageType.warning) {
+      tmpType = QuickAlertType.warning;
+    }
+
     return QuickAlert.show(
       context: context,
-      type: type,
+      type: tmpType,
       text: message,
       title: title,
       width: 400,
       onCancelBtnTap: onCancelBtnTap,
       onConfirmBtnTap: onConfirmBtnTap,
-    ); //
+    );
   }
-
- 
 }
+
+enum AppMessageType { info, success, warning, error }

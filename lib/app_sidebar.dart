@@ -1,16 +1,35 @@
-import 'package:app_template/app_template_controller_widget.dart';
-import 'package:app_template/app_controller.dart';
+// ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-final Color sideBarColor = Color(0xFF0F172B);
-final Color sideBarTextIconColor = Color(0xFF94A3B8);
-final Color sideBarTextIconSelectedColor = Colors.white;
+import 'package:app_template/controller/app_sidebar_controller.dart';
 
 class AppSidebar extends StatefulWidget {
   final GlobalKey<ScaffoldState> scaffoldKey;
-  const AppSidebar({super.key, required this.scaffoldKey});
+  final Color sideBarColor;
+  final Color sideBarTextIconColor;
+  final Color sideBarTextIconSelectedColor;
+  final Color selectedTileColor;
+  final List<SideMenu> listMenu;
+  final double width;
+  final Function(BuildContext context, SideMenu sideMenu) action;
+  final Function()? onCreated;
+  final Function()? onInit;
+
+  const AppSidebar({
+    super.key,
+    required this.scaffoldKey,
+    this.sideBarColor = const Color(0xFF0F172B),
+    this.sideBarTextIconColor = const Color(0xFF94A3B8),
+    this.sideBarTextIconSelectedColor = Colors.white,
+    this.listMenu = const [],
+    this.width = 250,
+    required this.action,
+    this.selectedTileColor = const Color(0xFF2D3345),
+    this.onCreated,
+    this.onInit,
+  });
 
   @override
   State<StatefulWidget> createState() {
@@ -21,34 +40,103 @@ class AppSidebar extends StatefulWidget {
 class AppSidebarState extends State<AppSidebar> {
   int selectedIndex = 0;
   bool extended = false;
+  AppSidebarController controller = AppSidebarController();
 
-  final ScrollController _scrollController = ScrollController();
+  @override
+  void initState() {
+    controller.setListMenu(widget.listMenu);
+    if (widget.onInit != null) {
+      widget.onInit!();
+    }
+
+    super.initState();
+  }
 
   @override
   void didChangeDependencies() {
-    Future.delayed(
-      Duration.zero,
-      () {
-        String location = AppTemplateControllerWidget.of(context)!
-            .appController
-            .getCurrentLocation();
-        AppTemplateControllerWidget.of(context)!
-            .appController
-            .setSelected(location);
-      },
-    );
     super.didChangeDependencies();
   }
 
   @override
   Widget build(BuildContext context) {
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(
+          create: (BuildContext context) => controller,
+        ),
+      ],
+      child: Builder(
+        builder: (context) => _SideMenuBuild(
+          action: widget.action,
+          listMenu: widget.listMenu,
+          scaffoldKey: widget.scaffoldKey,
+          selectedTileColor: widget.selectedTileColor,
+          sideBarColor: widget.sideBarColor,
+          sideBarTextIconColor: widget.sideBarTextIconColor,
+          sideBarTextIconSelectedColor: widget.sideBarTextIconSelectedColor,
+          width: widget.width,
+          onCreated: widget.onCreated,
+        ),
+      ),
+    );
+  }
+}
+
+class _SideMenuBuild extends StatefulWidget {
+  final GlobalKey<ScaffoldState> scaffoldKey;
+  final Color sideBarColor;
+  final Color sideBarTextIconColor;
+  final Color sideBarTextIconSelectedColor;
+  final Color selectedTileColor;
+  final List<SideMenu> listMenu;
+  final double width;
+  final Function(BuildContext context, SideMenu sideMenu) action;
+  final Function()? onCreated;
+  const _SideMenuBuild({
+    Key? key,
+    required this.scaffoldKey,
+    required this.sideBarColor,
+    required this.sideBarTextIconColor,
+    required this.sideBarTextIconSelectedColor,
+    required this.selectedTileColor,
+    required this.listMenu,
+    required this.width,
+    required this.action,
+    required this.onCreated,
+  }) : super(key: key);
+
+  @override
+  State<StatefulWidget> createState() {
+    return _SideMenuBuildState();
+  }
+}
+
+class _SideMenuBuildState extends State<_SideMenuBuild> {
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Provider.of<AppSidebarController>(context, listen: false)
+      //     .setListMenu(widget.listMenu)
+      //     .then((value) {
+      if (widget.onCreated != null) {
+        widget.onCreated!();
+      }
+      // });
+    });
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return SizedBox(
-      width: 250,
+      width: widget.width,
       child: Material(
-        color: sideBarColor,
+        color: widget.sideBarColor,
         child: Scrollbar(
           controller: _scrollController,
-          child: Consumer<AppController>(
+          child: Consumer<AppSidebarController>(
             builder: (context, value, child) {
               return ListView.builder(
                 controller: _scrollController,
@@ -59,6 +147,11 @@ class AppSidebarState extends State<AppSidebar> {
 
                     return _SidebarMenu(
                       menu: item,
+                      sideBarTextIconColor: widget.sideBarTextIconColor,
+                      sideBarTextIconSelectedColor:
+                          widget.sideBarTextIconSelectedColor,
+                      action: widget.action,
+                      selectedTileColor: widget.selectedTileColor,
                     );
                   }
 
@@ -71,12 +164,6 @@ class AppSidebarState extends State<AppSidebar> {
       ),
     );
   }
-
-  void toggleSidebar() {
-    setState(() {
-      extended = !extended;
-    });
-  }
 }
 
 class _SidebarMenu extends StatelessWidget {
@@ -84,10 +171,18 @@ class _SidebarMenu extends StatelessWidget {
   final int treeIndex;
   final double fontSize = 12;
   final double iconSize = 20;
+  final Color sideBarTextIconSelectedColor;
+  final Color sideBarTextIconColor;
+  final Color selectedTileColor;
+  final Function(BuildContext context, SideMenu sideMenu) action;
 
   const _SidebarMenu({
     required this.menu,
     this.treeIndex = 0,
+    required this.sideBarTextIconSelectedColor,
+    required this.sideBarTextIconColor,
+    required this.action,
+    required this.selectedTileColor,
   });
 
   @override
@@ -101,8 +196,9 @@ class _SidebarMenu extends StatelessWidget {
             contentPadding: const EdgeInsets.symmetric(horizontal: 16)
                 .copyWith(left: 16 + (treeIndex * 8)),
             selected: isSelected,
-            hoverColor: const Color(0xFF2D3345),
-            selectedTileColor: const Color(0xFF2D3345),
+            hoverColor: selectedTileColor, //const Color(0xFF2D3345),
+            selectedTileColor: selectedTileColor, //  Color(0xFF2D3345),
+            selectedColor: sideBarTextIconSelectedColor,
             leading: Icon(
               menu.iconData,
               size: menu.iconData == CupertinoIcons.circle ? 12 : iconSize,
@@ -119,7 +215,9 @@ class _SidebarMenu extends StatelessWidget {
                     : sideBarTextIconColor,
               ),
             ),
-            onTap: () => menu.action(context),
+            onTap: () {
+              action(context, menu);
+            },
             style: ListTileStyle.drawer,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(50),
@@ -137,6 +235,10 @@ class _SidebarMenu extends StatelessWidget {
           treeIndex: treeIndex,
           fontSize: fontSize,
           iconSize: iconSize,
+          sideBarTextIconColor: sideBarTextIconColor,
+          sideBarTextIconSelectedColor: sideBarTextIconSelectedColor,
+          action: action,
+          selectedTileColor: selectedTileColor,
         ),
         const SizedBox(
           height: 4,
@@ -151,12 +253,20 @@ class _SideMenuExpansion extends StatefulWidget {
   final int treeIndex;
   final double fontSize;
   final double iconSize;
+  final Color sideBarTextIconSelectedColor;
+  final Color sideBarTextIconColor;
+  final Color selectedTileColor;
+  final Function(BuildContext context, SideMenu sideMenu) action;
 
   const _SideMenuExpansion({
     required this.menu,
     this.treeIndex = 0,
     required this.fontSize,
     required this.iconSize,
+    required this.sideBarTextIconSelectedColor,
+    required this.sideBarTextIconColor,
+    required this.action,
+    required this.selectedTileColor,
   });
 
   @override
@@ -179,43 +289,44 @@ class _SideMenuExpansionState extends State<_SideMenuExpansion> {
       children: [
         ListTile(
           dense: true,
-          hoverColor: const Color(0xFF2D3345),
+          hoverColor: widget.selectedTileColor,
+          selectedTileColor: widget.selectedTileColor,
+          selectedColor: widget.sideBarTextIconSelectedColor,
           contentPadding: const EdgeInsets.symmetric(horizontal: 16)
               .copyWith(left: 16 + (widget.treeIndex * 8)),
-          selected: Provider.of<AppController>(context, listen: false)
+          selected: Provider.of<AppSidebarController>(context, listen: false)
               .isExpanded(widget.menu),
           leading: Icon(
             widget.menu.iconData,
             size: widget.iconSize,
-            color: Provider.of<AppController>(context, listen: false)
+            color: Provider.of<AppSidebarController>(context, listen: false)
                     .isExpanded(widget.menu)
-                ? sideBarTextIconSelectedColor
-                : sideBarTextIconColor,
+                ? widget.sideBarTextIconSelectedColor
+                : widget.sideBarTextIconColor,
           ),
           title: Text(
             widget.menu.label,
             style: TextStyle(
               fontSize: widget.fontSize,
-              color: Provider.of<AppController>(context, listen: false)
+              color: Provider.of<AppSidebarController>(context, listen: false)
                       .isExpanded(widget.menu)
-                  ? sideBarTextIconSelectedColor
-                  : sideBarTextIconColor,
+                  ? widget.sideBarTextIconSelectedColor
+                  : widget.sideBarTextIconColor,
             ),
           ),
           onTap: () {
-            setState(() {
-              Provider.of<AppController>(context, listen: false).setExpanded(
-                  widget.menu,
-                  !Provider.of<AppController>(context, listen: false)
-                      .isExpanded(widget.menu));
-            });
+            Provider.of<AppSidebarController>(context, listen: false)
+                .setExpanded(
+                    widget.menu,
+                    !Provider.of<AppSidebarController>(context, listen: false)
+                        .isExpanded(widget.menu));
           },
           style: ListTileStyle.drawer,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(50),
           ),
           trailing: Icon(
-            Provider.of<AppController>(context, listen: false)
+            Provider.of<AppSidebarController>(context, listen: false)
                     .isExpanded(widget.menu)
                 ? Icons.arrow_drop_down
                 : Icons.arrow_right_sharp,
@@ -226,7 +337,7 @@ class _SideMenuExpansionState extends State<_SideMenuExpansion> {
           duration: const Duration(
             milliseconds: 200,
           ),
-          height: Provider.of<AppController>(context, listen: false)
+          height: Provider.of<AppSidebarController>(context, listen: false)
                   .isExpanded(widget.menu)
               ? (menuLength * 40) + (menuLength * 4) + ((menuExpanded) * 4) + 4
               : 0,
@@ -237,6 +348,11 @@ class _SideMenuExpansionState extends State<_SideMenuExpansion> {
                   .map((e) => _SidebarMenu(
                         menu: e,
                         treeIndex: widget.treeIndex + 1,
+                        sideBarTextIconColor: widget.sideBarTextIconColor,
+                        sideBarTextIconSelectedColor:
+                            widget.sideBarTextIconSelectedColor,
+                        action: widget.action,
+                        selectedTileColor: widget.selectedTileColor,
                       ))
                   .toList(),
               const SizedBox(
@@ -253,7 +369,7 @@ class _SideMenuExpansionState extends State<_SideMenuExpansion> {
     if (menu.menus.isNotEmpty) {
       currentTotal = menu.menus.length;
       for (var item in menu.menus) {
-        if (Provider.of<AppController>(context, listen: false)
+        if (Provider.of<AppSidebarController>(context, listen: false)
             .isExpanded(item)) {
           currentTotal = currentTotal +
               getMenuLength(item, currentTotal + item.menus.length, count + 1);
@@ -268,7 +384,7 @@ class _SideMenuExpansionState extends State<_SideMenuExpansion> {
   int getMenuExpanded(SideMenu menu, int currentTotal, int count) {
     if (menu.menus.isNotEmpty) {
       for (var item in menu.menus) {
-        if (Provider.of<AppController>(context, listen: false)
+        if (Provider.of<AppSidebarController>(context, listen: false)
             .isExpanded(item)) {
           currentTotal++;
 
@@ -322,9 +438,6 @@ class SideMenu extends SideItem {
   }
 
   void action(BuildContext context) {
-    AppTemplateControllerWidget.of(context)!
-        .appController
-        .actionSidebar(context, routePath);
     // GoRouter.of(context).go(routePath);
   }
 

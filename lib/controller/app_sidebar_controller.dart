@@ -1,49 +1,19 @@
 import 'package:app_template/app_sidebar.dart';
-import 'package:app_template/app_template_controller_widget.dart';
-import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 
-abstract class AppController extends ChangeNotifier {
-  String pageTitle = 'Page Title';
-  double elevation = 0;
-
+class AppSidebarController<T> extends ChangeNotifier {
   List<SideMenu> listMenu = [];
   List<String> listExpanded = [];
-
-  Future<Response> getSidebarData(BuildContext context);
-  actionSidebar(BuildContext context, String routePath);
-  String getCurrentLocation();
 
   late Map<String, String> routePath;
   late Map<String, IconData> iconData;
 
-  Future<void> loadSideMenu(BuildContext context) async {
-    String location = getCurrentLocation();
-
-    Response response = await getSidebarData(context);
-
-    List<dynamic> rawData = response.data;
+  Future<void> setListMenu(List<SideMenu> tmpMenus) async {
 
     listMenu.clear();
-    for (var element in rawData) {
-      listMenu.add(
-        SideMenu(
-            label: element['name'],
-            key: element['key'],
-            routePath: routePath.containsKey(element['key'])
-                ? routePath[element['key']]!
-                : '-',
-            iconData: iconData.containsKey(element['key'])
-                ? iconData[element['key']]!
-                : CupertinoIcons.dot_square,
-            menus: searchChildren(element['children']),
-            selected: routePath.containsKey(element['key'])
-                ? routePath[element['key']]! == location
-                : false),
-      );
-    }
+    listMenu =tmpMenus;
 
-    searchAndSetSelected(listMenu, location);
+    // searchAndSetSelected(listMenu, location);
     initExpanded(listMenu);
 
     notifyListeners();
@@ -87,20 +57,20 @@ abstract class AppController extends ChangeNotifier {
     return false;
   }
 
-  void setSelected(String routePath) {
-    searchAndSetSelected(listMenu, routePath);
+  void setSelected(SideMenu sideMenu) {
+    searchAndSetSelected(listMenu, sideMenu);
     listExpanded.clear();
     initExpanded(listMenu);
 
     notifyListeners();
   }
 
-  void searchAndSetSelected(List<SideMenu> menus, String routePath) {
+  void searchAndSetSelected(List<SideMenu> menus, SideMenu selectedMenu) {
     for (var element in menus) {
       if (element.menus.isEmpty) {
-        element.selected = routePath.contains(element.routePath);
+        element.selected = selectedMenu.key == element.key;
       } else {
-        searchAndSetSelected(element.menus, routePath);
+        searchAndSetSelected(element.menus, selectedMenu);
       }
     }
   }

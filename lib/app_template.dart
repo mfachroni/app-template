@@ -1,5 +1,5 @@
 import 'package:app_template/app_template_controller_widget.dart';
-import 'package:app_template/app_controller.dart';
+import 'package:app_template/controller/app_controller.dart';
 import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 
@@ -26,6 +26,7 @@ class _StatePage extends State<AppTemplate> {
   Widget build(BuildContext context) {
     return AppTemplateControllerWidget(
       appController: widget.appController,
+      getCurrentLocation: widget.getCurrentLocation,
       child: MultiProvider(
         providers: [
           ChangeNotifierProvider(

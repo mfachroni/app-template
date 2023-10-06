@@ -3,7 +3,7 @@ import 'package:flutter/cupertino.dart';
 
 class AppPageData {
   List<ActionClass> actions = [];
- 
+
   late Response response;
 
   AppPageData({
@@ -18,8 +18,10 @@ class AppPageData {
     return false;
   }
 
-  Future<AppPageData> processResponse(BuildContext context, {required Future<Response> Function(BuildContext context) loadData}) async {
-    response = await loadData(context);
+  Future<AppPageData> processResponse(BuildContext context,
+      {required Future<Response> Function(BuildContext context)
+          initialLoad}) async {
+    response = await initialLoad(context);
     actions = response.data['actions'] != null
         ? (response.data['actions'] as Map<dynamic, dynamic>)
             .entries

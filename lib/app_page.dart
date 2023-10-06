@@ -6,11 +6,17 @@ import 'package:flutter/material.dart';
 
 class AppPage extends StatefulWidget {
   final Widget body;
-  // final String? initUrl;
-  final Future<Response> Function(BuildContext context)? loadData;
+  final bool scrollable;
+  final Future<Response> Function(BuildContext context)? initialLoad;
+
   final Function(AppPageData initalData)? onInitSuccess;
-  const AppPage(
-      {super.key, required this.body, this.onInitSuccess, this.loadData});
+  const AppPage({
+    super.key,
+    required this.body,
+    this.onInitSuccess,
+    this.initialLoad,
+    this.scrollable = false,
+  });
 
   @override
   State<StatefulWidget> createState() {
@@ -25,27 +31,9 @@ class AppPageState extends State<AppPage> {
 
   @override
   void initState() {
-    if (widget.loadData != null) {
+    if (widget.initialLoad != null) {
       Future.delayed(Duration.zero, () async {
-        setState(() {
-          _isLoading = true;
-        });
-        _appPageData
-            .processResponse(
-          context,
-          loadData: widget.loadData!,
-        )
-            .then((value) {
-          setState(() {
-            _isLoading = false;
-          });
-          widget.onInitSuccess!(value);
-        }).onError((error, stackTrace) {
-          setState(() {
-            dioException = error as DioException;
-            _isLoading = false;
-          });
-        });
+        load();
       });
     } else {
       setState(() {
@@ -56,21 +44,53 @@ class AppPageState extends State<AppPage> {
     super.initState();
   }
 
+  void load() {
+    setState(() {
+      _isLoading = true;
+    });
+    _appPageData
+        .processResponse(context, initialLoad: widget.initialLoad!)
+        .then((value) {
+      setState(() {
+        _isLoading = false;
+      });
+      widget.onInitSuccess!(value);
+    }).onError((error, stackTrace) {
+      setState(() {
+        dioException = error as DioException;
+        _isLoading = false;
+      });
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    return AppLayout(body: _isLoading ? const PageShimmer() : _buildBody());
+    return AppLayout(
+      body: _isLoading ? const PageShimmer() : _buildBody(),
+      scrollable: widget.scrollable,
+    );
   }
 
   Widget _buildBody() {
     if (dioException != null) {
       if (dioException!.type == DioExceptionType.badResponse) {
         if (dioException!.response!.statusCode == 403) {
-          return Text(dioException!.response!.statusMessage!);
+          return Center(
+              child: Text(
+            dioException!.response!.statusMessage!,
+          ));
+        }
+
+        if (dioException!.response!.statusCode == 404) {
+          return Center(
+            child: Text(dioException!.response!.statusMessage!),
+          );
         }
       }
 
       return Text('Something Error');
+    } else {
+      return widget.body;
     }
-    return widget.body;
   }
 }

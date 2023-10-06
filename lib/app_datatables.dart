@@ -292,24 +292,18 @@ class AppDataTableSource extends AsyncDataTableSource {
       newRows.rows.add(
         DataRow2(
             key: ValueKey<String>(element.value['id']),
-            // ignore: use_build_context_synchronously
-            // color: Theme.of(context).brightness == Brightness.dark
-            //     ? null
-            //     : isStrippedTable
-            //         ? MaterialStateProperty.resolveWith<Color>(
-            //             (Set<MaterialState> states) {
-            //             // if (element.containsKey('DT_RowIndex')) {
-            //             //   indexRow = element['DT_RowIndex'];
-            //             // } else {
-            //             //   indexRow = indexRow + 1;
-            //             // }
-            //             return element.key.isEven
-            //                 ? Theme.of(context)
-            //                     .colorScheme
-            //                     .surface // Color.fromRGBO(248, 250, 251, 1)
-            //                 : Theme.of(context).colorScheme.surfaceVariant;
-            //           })
-            //         : null,
+            color: Theme.of(context).brightness == Brightness.dark
+                ? null
+                : isStrippedTable
+                    ? MaterialStateProperty.resolveWith<Color>(
+                        (Set<MaterialState> states) {
+                        return element.key.isEven
+                            ? Theme.of(context)
+                                .colorScheme
+                                .surface // Color.fromRGBO(248, 250, 251, 1)
+                            : Theme.of(context).colorScheme.surfaceVariant;
+                      })
+                    : null,
             cells: columns.map(
               (e) {
                 return e.render != null
@@ -321,7 +315,11 @@ class AppDataTableSource extends AsyncDataTableSource {
                         //           .surface // Color.fromRGBO(248, 250, 251, 1)
                         //       : Theme.of(context).colorScheme.surfaceVariant,
                         // child:
-                        e.render!(element.value[e.data], element.value),
+                        Align(
+                          alignment: e.alignment ?? Alignment.centerLeft,
+                          child:
+                              e.render!(element.value[e.data], element.value),
+                        ),
                         // ),
                       )
                     : DataCell(

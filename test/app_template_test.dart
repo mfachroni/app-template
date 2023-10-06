@@ -1,4 +1,4 @@
-import 'package:app_template/app_controller.dart';
+import 'package:app_template/controller/app_controller.dart';
 import 'package:dio/src/response.dart';
 import 'package:flutter/src/widgets/framework.dart';
 import 'package:flutter_test/flutter_test.dart';

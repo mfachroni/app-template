@@ -6,8 +6,8 @@ class AppFormSelect extends StatelessWidget {
   final bool multiple;
   final bool showSearchBox;
   final Future<Response> Function(String search)? serverItems;
-  final SelectData? selectedData;
-  final Function(SelectData? selectedData) onChanged;
+  final List<SelectData>? selectedData;
+  final Function(List<SelectData>? selectedData) onChanged;
   const AppFormSelect({
     super.key,
     this.multiple = false,
@@ -33,7 +33,8 @@ class AppFormSelect extends StatelessWidget {
                   .map((e) => SelectData(id: e['id'], text: e['text']))
                   .toList();
             },
-      selectedItem: selectedData,
+      selectedItem: selectedData?.first,
+      compareFn: (i, s) => i.id == s.id,
       popupProps: PopupProps.menu(
         showSearchBox: showSearchBox,
         isFilterOnline: true,
@@ -43,13 +44,37 @@ class AppFormSelect extends StatelessWidget {
         return item.text;
       },
       onChanged: (value) {
-        onChanged(value);
+        onChanged([value!]);
       },
     );
   }
 
   Widget _buildMultiple() {
-    return DropdownSearch<SelectData>.multiSelection();
+    // ignore: prefer_if_null_operators
+    return DropdownSearch<SelectData>.multiSelection(
+      asyncItems: serverItems == null
+          ? null
+          : (text) async {
+              Response response = await serverItems!(text);
+
+              return (response.data['results'] as List)
+                  .map((e) => SelectData(id: e['id'], text: e['text']))
+                  .toList();
+            },
+      compareFn: (i, s) => i.id == s.id,
+      selectedItems: selectedData != null ? selectedData! : [],
+      popupProps: PopupPropsMultiSelection.menu(
+        showSearchBox: showSearchBox,
+        isFilterOnline: true,
+        showSelectedItems: true,
+      ),
+      itemAsString: (item) {
+        return item.text;
+      },
+      onChanged: (value) {
+        onChanged(value);
+      },
+    );
   }
 }
 
